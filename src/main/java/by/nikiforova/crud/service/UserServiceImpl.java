@@ -36,7 +36,7 @@ public class UserServiceImpl implements UserService {
             throw new UserAlreadyExistsException("Пользователь с email " + createUserDto.getEmail() + " уже существует");
         }
 
-        User user = mapper.map(createUserDto, User.class);
+        User user = userRepository.save(mapper.map(createUserDto, User.class));
         UserDto userDto = mapper.map(user, UserDto.class);
 
         logger.info("Пользователь создан name={} email={}", userDto.getName(), userDto.getEmail());
@@ -65,7 +65,7 @@ public class UserServiceImpl implements UserService {
     public UserDto updateUser(Integer userDtoId, UpdateUserDto  updateUserDto) {
         logger.info("Обновление пользователя id={} name={}",  userDtoId, updateUserDto.getName());
 
-        if (userRepository.existsByEmail(updateUserDto.getEmail())) {
+        if (userRepository.existsByEmailAndIdNot(updateUserDto.getEmail(), userDtoId)) {
             throw new UserAlreadyExistsException("Пользователь с email " + updateUserDto.getEmail() + " уже существует");
         }
         User user = userRepository.findById(userDtoId)
@@ -86,7 +86,7 @@ public class UserServiceImpl implements UserService {
     public void deleteUser(Integer id) {
         logger.info("Удаление пользователя по id={}", id);
         if (userRepository.deleteUserById(id) == 0){
-            throw new UserNotFoundException("User c id:" + id + " не найден");
+            throw new UserNotFoundException("User c id:" + id + " не найден.");
         }
         logger.info("Пользователь удален id={}", id);
     }

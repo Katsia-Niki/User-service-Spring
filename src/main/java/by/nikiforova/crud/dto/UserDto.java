@@ -1,5 +1,7 @@
 package by.nikiforova.crud.dto;
 
+import java.util.Objects;
+
 public class UserDto {
     private int id;
     private String name;
@@ -46,5 +48,28 @@ public class UserDto {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("UserDto{");
+        sb.append("id=").append(id);
+        sb.append(", name='").append(name).append('\'');
+        sb.append(", email='").append(email).append('\'');
+        sb.append(", age=").append(age);
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        UserDto userDto = (UserDto) o;
+        return id == userDto.id && Objects.equals(name, userDto.name) && Objects.equals(email, userDto.email) && Objects.equals(age, userDto.age);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, email, age);
     }
 }
