@@ -91,7 +91,7 @@ public class UserControllerTest {
         UpdateUserDto updateDto = new UpdateUserDto("UpdatedName", "updated_email@example.com", 28);
         UserDto responseDto = new UserDto(2, 28, "UpdatedName", "updated_email@example.com");
 
-        when(userService.updateUser(2, updateDto)).thenReturn(responseDto);
+        when(userService.updateUser(eq(2), any(UpdateUserDto.class))).thenReturn(responseDto);
 
 
         mockMvc.perform(put("/api/users/2")
