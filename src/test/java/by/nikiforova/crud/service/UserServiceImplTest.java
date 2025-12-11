@@ -187,17 +187,19 @@ class UserServiceImplTest {
     @Test
     @DisplayName("Success")
     void deleteUserTest() {
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
         when(userRepository.deleteUserById(USER_ID)).thenReturn(1);
 
         assertDoesNotThrow(() -> userService.deleteUser(USER_ID));
 
+        verify(userRepository).findById(USER_ID);
         verify(userRepository).deleteUserById(USER_ID);
     }
 
     @Test
     @DisplayName("UserNotFoundException")
     void deleteUserExceptionTest() {
-        when(userRepository.deleteUserById(USER_ID)).thenReturn(0);
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
 
         UserNotFoundException exception = assertThrows(
                 UserNotFoundException.class,
@@ -205,6 +207,6 @@ class UserServiceImplTest {
         );
 
         assertEquals("User c id:" + USER_ID + " не найден.", exception.getMessage());
-        verify(userRepository).deleteUserById(USER_ID);
+        verify(userRepository).findById(USER_ID);
     }
 }

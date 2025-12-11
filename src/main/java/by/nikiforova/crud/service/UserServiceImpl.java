@@ -5,6 +5,8 @@ import by.nikiforova.crud.dto.UpdateUserDto;
 import by.nikiforova.crud.dto.UserDto;
 import by.nikiforova.crud.entity.User;
 import by.nikiforova.crud.exception.*;
+import by.nikiforova.crud.kafka.KafkaProducer;
+import by.nikiforova.crud.kafka.UserEvent;
 import by.nikiforova.crud.repository.UserRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,9 +22,11 @@ public class UserServiceImpl implements UserService {
     private static final Logger logger = LogManager.getLogger();
     private final ModelMapper mapper = new ModelMapper();
     private final UserRepository userRepository;
+    public final KafkaProducer kafkaProducer;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository, KafkaProducer kafkaProducer) {
         this.userRepository = userRepository;
+        this.kafkaProducer = kafkaProducer;
         logger.info("UserServiceImpl constructor");
     }
 
@@ -39,6 +43,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.save(mapper.map(createUserDto, User.class));
         UserDto userDto = mapper.map(user, UserDto.class);
 
+        kafkaProducer.sendMessage(new UserEvent("CREATE", user.getEmail()));
         logger.info("Пользователь создан name={} email={}", userDto.getName(), userDto.getEmail());
 
         return userDto;
@@ -85,9 +90,15 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void deleteUser(Integer id) {
         logger.info("Удаление пользователя по id={}", id);
+
+        String email = userRepository.findById(id)
+                .map(User::getEmail)
+                .orElseThrow(() -> new UserNotFoundException("User c id:" + id + " не найден."));
+
         if (userRepository.deleteUserById(id) == 0){
             throw new UserNotFoundException("User c id:" + id + " не найден.");
         }
+        kafkaProducer.sendMessage(new UserEvent("DELETE", email));
         logger.info("Пользователь удален id={}", id);
     }
 }
