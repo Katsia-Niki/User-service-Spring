@@ -21,6 +21,13 @@ public class UserEventListener {
             containerFactory = "kafkaListenerContainerFactory")
     public void handleUserEvent(UserEvent event) {
         logger.info("Получено сообщение из Kafka: operation={}, email={}", event.getOperation(), event.getUserEmail());
-        emailNotificationService.sendForEvent(event);
+        try {
+            emailNotificationService.sendForEvent(event);
+        } catch (Exception e) {
+            logger.error("Ошибка при обработке события из Kafka: operation={}, email={}, error={}", 
+                    event.getOperation(), event.getUserEmail(), e.getMessage(), e);
+            // Не пробрасываем исключение дальше, чтобы Kafka не пытался обработать сообщение повторно
+            // В реальном приложении можно добавить механизм повторных попыток или отправки в DLQ
+        }
     }
 }

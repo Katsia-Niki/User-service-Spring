@@ -1,5 +1,6 @@
 package by.nikiforova.crud.dto;
 
+
 import java.util.Objects;
 
 public class UserDto {

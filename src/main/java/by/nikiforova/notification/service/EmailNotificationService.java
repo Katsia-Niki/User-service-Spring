@@ -24,11 +24,17 @@ public class EmailNotificationService {
     }
 
     public void sendForEvent(UserEvent event) {
+        logger.info("Начало обработки события: operation={}, email={}", 
+                event != null ? event.getOperation() : "null", 
+                event != null ? event.getUserEmail() : "null");
+        
         if (event == null || !StringUtils.hasText(event.getUserEmail())) {
             logger.warn("Пропущено отправление письма: event пустой или без email");
             return;
         }
         String operation = event.getOperation() == null ? "" : event.getOperation().toUpperCase();
+        logger.info("Обработка операции: {}", operation);
+        
         String body = switch (operation) {
             case "CREATE" -> "Здравствуйте! Ваш аккаунт на сайте ваш сайт был успешно создан.";
             case "DELETE" -> "Здравствуйте! Ваш аккаунт был удалён.";
@@ -40,6 +46,7 @@ public class EmailNotificationService {
             return;
         }
 
+        logger.info("Вызов sendEmail для email={}", event.getUserEmail());
         sendEmail(event.getUserEmail(), "Уведомление о пользователе", body);
     }
 
@@ -48,13 +55,41 @@ public class EmailNotificationService {
     }
 
     private void sendEmail(String to, String subject, String body) {
-        SimpleMailMessage mailMessage = new SimpleMailMessage();
-        mailMessage.setFrom(from);
-        mailMessage.setTo(to);
-        mailMessage.setSubject(subject);
-        mailMessage.setText(body);
-        mailSender.send(mailMessage);
-        logger.info("Письмо отправлено to={} subject={}", to, subject);
+        logger.info("Попытка отправить письмо: to={}, subject={}, from={}", to, subject, from);
+        long startTime = System.currentTimeMillis();
+        try {
+            SimpleMailMessage mailMessage = new SimpleMailMessage();
+            mailMessage.setFrom(from);
+            mailMessage.setTo(to);
+            mailMessage.setSubject(subject);
+            mailMessage.setText(body);
+            logger.info("Вызов mailSender.send() в {}...", Thread.currentThread().getName());
+            
+            mailSender.send(mailMessage);
+            
+            long duration = System.currentTimeMillis() - startTime;
+            logger.info("Письмо успешно отправлено to={} subject={} за {} мс", to, subject, duration);
+        } catch (Exception e) {
+            long duration = System.currentTimeMillis() - startTime;
+            logger.error("Ошибка при отправке письма to={} subject={} после {} мс", to, subject, duration);
+            logger.error("Тип исключения: {}", e.getClass().getName());
+            logger.error("Сообщение об ошибке: {}", e.getMessage());
+            
+            Throwable cause = e.getCause();
+            if (cause != null) {
+                logger.error("Причина (cause): тип={}, сообщение={}", cause.getClass().getName(), cause.getMessage());
+                if (cause instanceof jakarta.mail.AuthenticationFailedException) {
+                    logger.error("ОШИБКА АУТЕНТИФИКАЦИИ: Неверный пароль или имя пользователя");
+                } else if (cause instanceof jakarta.mail.MessagingException) {
+                    logger.error("ОШИБКА СООБЩЕНИЯ: {}", cause.getMessage());
+                }
+            }
+            
+            logger.error("Полный стек ошибки:", e);
+            // Не пробрасываем исключение, чтобы не блокировать Kafka listener
+            // В реальном приложении можно добавить механизм повторных попыток
+            logger.warn("Письмо НЕ отправлено, но обработка продолжается");
+        }
     }
 }
 

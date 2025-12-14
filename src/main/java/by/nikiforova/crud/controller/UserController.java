@@ -12,6 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -44,9 +45,15 @@ public class UserController {
         return userService.getAllUsers();
     }
 
-    @PutMapping(path = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public UserDto updateUser(@PathVariable @NotNull @Min(2) @Max(50) Integer id, @RequestBody @Valid UpdateUserDto dto) {
-        return userService.updateUser(id, dto);
+    @PutMapping(
+            path = "/{id}",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<UserDto> updateUser(@PathVariable @NotNull @Min(2) @Max(50) Integer id, @RequestBody @Valid UpdateUserDto dto) {
+        logger.info("Собираюсь обновить пользователя: {}", dto);
+        UserDto result = userService.updateUser(id, dto);
+        logger.info("Обновленный пользователь: {}", result);
+        return ResponseEntity.ok(result);
     }
 
     @DeleteMapping("/{id}")
