@@ -7,7 +7,7 @@ spring.kafka.bootstrap-servers=localhost:9092
 
 spring.mail.host=smtp.gmail.com
 spring.mail.port=587
-spring.mail.username=katsiaryna.niki@gmail.com
+spring.mail.username=your-email@gmail.com
 spring.mail.password=${MAIL_PASSWORD:}
 spring.mail.properties.mail.smtp.auth=true
 spring.mail.properties.mail.smtp.starttls.enable=true
@@ -19,5 +19,5 @@ spring.mail.properties.mail.smtp.writetimeout=30000
 spring.mail.properties.mail.debug=true
 spring.mail.properties.mail.smtp.ssl.protocols=TLSv1.2
 
-notification.mail.from=katsiaryna.niki@gmail.com
+notification.mail.from=your-email@gmail.com
 
