@@ -35,8 +35,6 @@ public class UserServiceApplication {
             SpringApplication.run(UserServiceApplication.class, args);
         } catch (Exception e) {
             logger.error("Критическая ошибка при запуске приложения", e);
-        } finally {
-            logger.info("Завершение работы user-service");
         }
     }
 }
