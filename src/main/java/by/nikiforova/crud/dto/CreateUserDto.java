@@ -14,7 +14,7 @@ public class CreateUserDto {
 
     @NotNull(message = "Возраст не может быть пустым")
     @Min(value = 0, message = "Возраст не может быть отрицательным")
-    @Max(value = 150, message = "Возраст не может быть больше 120")
+    @Max(value = 120, message = "Возраст не может быть больше 120")
     private Integer age;
 
 

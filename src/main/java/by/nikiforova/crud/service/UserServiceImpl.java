@@ -43,7 +43,15 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.save(mapper.map(createUserDto, User.class));
         UserDto userDto = mapper.map(user, UserDto.class);
 
-        kafkaProducer.sendMessage(new UserEvent("CREATE", user.getEmail()));
+        // Отправляем событие в Kafka, но не блокируем создание при ошибках Kafka
+        try {
+            kafkaProducer.sendMessage(new UserEvent("CREATE", user.getEmail()));
+        } catch (Exception e) {
+            logger.error("Ошибка при отправке события CREATE в Kafka для пользователя email={}: {}", 
+                    user.getEmail(), e.getMessage());
+            // Не пробрасываем исключение, чтобы создание пользователя завершилось успешно
+        }
+        
         logger.info("Пользователь создан name={} email={}", userDto.getName(), userDto.getEmail());
 
         return userDto;
@@ -98,7 +106,16 @@ public class UserServiceImpl implements UserService {
         if (userRepository.deleteUserById(id) == 0){
             throw new UserNotFoundException("User c id:" + id + " не найден.");
         }
-        kafkaProducer.sendMessage(new UserEvent("DELETE", email));
+        
+        // Отправляем событие в Kafka, но не блокируем удаление при ошибках Kafka
+        try {
+            kafkaProducer.sendMessage(new UserEvent("DELETE", email));
+        } catch (Exception e) {
+            logger.error("Ошибка при отправке события DELETE в Kafka для пользователя id={}, email={}: {}", 
+                    id, email, e.getMessage());
+            // Не пробрасываем исключение, чтобы удаление пользователя завершилось успешно
+        }
+        
         logger.info("Пользователь удален id={}", id);
     }
 }
